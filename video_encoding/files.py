@@ -1,6 +1,7 @@
 import os
 
 from django.core.files import File
+from django.core.files.storage import default_storage
 
 from .backends import get_backend
 
@@ -39,8 +40,8 @@ class VideoFile(File):
         if not hasattr(self, '_info_cache'):
             encoding_backend = get_backend()
             try:
-                path = os.path.abspath(self.path)
-            except AttributeError:
-                path = os.path.abspath(self.name)
+                path = default_storage.path(getattr(self, 'path', self.name))
+            except NotImplementedError:
+                path = default_storage.url(getattr(self, 'path', self.name))
             self._info_cache = encoding_backend.get_media_info(path)
         return self._info_cache
