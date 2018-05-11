@@ -73,8 +73,8 @@ class FFmpegBackend(BaseEncodingBackend):
         if process.returncode != 0:
             raise FFmpegError("`{}` exited with code {:d}".format(
                 ' '.join(process.args), process.returncode))
-        self.stdout = stdout.decode(console_encoding)
-        self.stderr = stderr.decode(console_encoding)
+        self.stdout = stdout.decode(console_encoding, 'ignore')
+        self.stderr = stderr.decode(console_encoding, 'ignore')
         return self.stdout, self.stderr
 
     def encode(self, source_path, target_path, params):
@@ -99,7 +99,7 @@ class FFmpegBackend(BaseEncodingBackend):
             if not out:
                 break
 
-            out = out.decode(console_encoding)
+            out = out.decode(console_encoding, 'ignore')
             output += out
             buf += out
 
