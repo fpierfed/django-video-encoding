@@ -40,8 +40,12 @@ class VideoFile(File):
         if not hasattr(self, '_info_cache'):
             encoding_backend = get_backend()
             try:
-                path = default_storage.path(getattr(self, 'path', self.name))
+                path = getattr(self, 'path', self.name)
             except NotImplementedError:
-                path = default_storage.url(getattr(self, 'path', self.name))
+                path = self.name
+            try:
+                path = default_storage.path(path)
+            except NotImplementedError:
+                path = default_storage.url(path)
             self._info_cache = encoding_backend.get_media_info(path)
         return self._info_cache
