@@ -10,8 +10,8 @@ class FormatInline(admin.GenericTabularInline):
     extra = 0
     max_num = 0
 
-    def has_add_permission(self):
+    def has_add_permission(self, request):
         return False
 
-    def has_delete_permission(self, obj=None):
+    def has_delete_permission(self, request, obj=None):
         return False
