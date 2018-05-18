@@ -4,6 +4,7 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 
 from .backends import get_backend
+from .exceptions import FFmpegError
 
 
 class VideoFile(File):
@@ -47,5 +48,8 @@ class VideoFile(File):
                 path = default_storage.path(path)
             except NotImplementedError:
                 path = default_storage.url(path)
-            self._info_cache = encoding_backend.get_media_info(path)
+            try:
+                self._info_cache = encoding_backend.get_media_info(path)
+            except FFmpegError:
+                self._info_cache = {}
         return self._info_cache
