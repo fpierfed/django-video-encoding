@@ -1,3 +1,4 @@
+from fractions import Fraction
 import json
 import locale
 import logging
@@ -25,10 +26,10 @@ class FFmpegBackend(BaseEncodingBackend):
 
     def __init__(self):
 
-        # Add -strict -2 parameters to support aac codec (which is experimental)
+        # Add -strict -2 parameters to support aac codec, which is experimental
         # This will fix errors in tests
         self.params = ['-threads', str(settings.VIDEO_ENCODING_THREADS),
-                       '-y', '-strict', '-2']  # overwrite temporary created file
+                       '-y', '-strict', '-2']  # overwrite temporary file
 
         self.ffmpeg_path = getattr(
             settings, 'VIDEO_ENCODING_FFMPEG_PATH', which('ffmpeg'))
@@ -157,11 +158,16 @@ class FFmpegBackend(BaseEncodingBackend):
         stdout, __ = self._check_returncode(process)
 
         media_info = self._parse_media_info(stdout)
+        if len(media_info['video']):
+            raw_fps = media_info['video'][0].get('avg_frame_rate', None)
+        else:
+            raw_fps = None
 
         return {
             'duration': float(media_info['format']['duration']),
             'width': int(media_info['video'][0]['width']),
             'height': int(media_info['video'][0]['height']),
+            'fps': float(Fraction(raw_fps)) if raw_fps else None,
         }
 
     def get_thumbnail(self, video_path, at_time=0.5):
