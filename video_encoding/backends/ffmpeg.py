@@ -188,3 +188,38 @@ class FFmpegBackend(BaseEncodingBackend):
         self._check_returncode(process)
 
         return image_path
+
+    def get_animated_thumbnail(self, video_path, at_time=0.5, num_frames=10,
+                               width=320):
+        """
+        Extracts an animated GIF preview of a video and returns its path.
+        """
+        filename = os.path.basename(video_path)
+        filename, __ = os.path.splitext(filename)
+        _, image_path = tempfile.mkstemp(suffix='_{}.gif'.format(filename))
+
+        media_info = self.get_media_info(video_path)
+        length = media_info['duration']
+        fps = media_info['fps']
+        if not fps:
+            # We have to guess. Let's try with 30
+            fps = 30.
+        out_fps = round(num_frames / length, 2)
+
+        # We want to make sure that we have at least num_frames to work with
+        thumbnail_time = min(at_time, max(0, length - (num_frames / fps)))
+
+        filter_str = 'fps={},scale={}:-1'.format(out_fps, width)
+        filter_str += ':flags=lanczos,split [o1] [o2];[o1] '
+        filter_str += 'palettegen [p]; [o2] fifo [o3];[o3] [p] paletteuse'
+        cmds = [self.ffmpeg_path,
+                '-y',
+                '-i', video_path,
+                '-ss', str(thumbnail_time),
+                '-filter_complex', filter_str,
+                image_path]
+
+        process = self._spawn(cmds)
+        self._check_returncode(process)
+
+        return image_path
