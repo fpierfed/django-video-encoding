@@ -170,7 +170,7 @@ class FFmpegBackend(BaseEncodingBackend):
             'fps': float(Fraction(raw_fps)) if raw_fps else None,
         }
 
-    def get_thumbnail(self, video_path, at_time=0.5):
+    def get_thumbnail(self, video_path, at_time=0.5, width=320):
         """
         Extracts an image of a video and returns its path.
         """
@@ -182,7 +182,10 @@ class FFmpegBackend(BaseEncodingBackend):
         thumbnail_time = min(at_time, video_duration - 0.02)
 
         cmds = [self.ffmpeg_path, '-i', video_path, '-vframes', '1']
-        cmds.extend(['-ss', str(thumbnail_time), '-y', image_path])
+        cmds.extend(['-ss', str(thumbnail_time),
+                     '-vf', 'scale={}:-1'.format(width),
+                     '-y',
+                     image_path])
 
         process = self._spawn(cmds)
         self._check_returncode(process)
